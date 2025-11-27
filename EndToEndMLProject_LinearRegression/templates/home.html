@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algerian Forest FWI Prediction</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #0c4b77, #195b96);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Segoe UI", sans-serif;
+            color: #fff;
+        }
+        .container-box {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(6px);
+            border-radius: 12px;
+            padding: 40px 35px;
+            width: 100%;
+            max-width: 680px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .form-control {
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .btn-main {
+            background: #ffd43b;
+            color: #202020;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 12px;
+            transition: 0.25s;
+        }
+        .btn-main:hover {
+            background: #ffca2c;
+            transform: scale(1.04);
+        }
+        /* Ensure readable text inside modal (override global white color) */
+        .modal-content, .modal-body, .modal-header, .modal-footer {
+            color: #222 !important;
+        }
+        .prediction-value {
+            font-size: 1.6rem;
+            color: #111;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-box">
+    <h2>🔥 Algerian Forest FWI Prediction</h2>
+
+    <form action="{{ url_for('predict') }}" method="POST">
+    <div class="row">
+        <div class="col-md-6">
+
+            <label for="Temperature">🌡 Temperature (°C)</label>
+            <input type="text" class="form-control" id="Temperature" name="Temperature"
+                   placeholder="Enter Temperature" required>
+
+            <label for="RH">💧 Relative Humidity (%)</label>
+            <input type="text" class="form-control" id="RH" name="RH"
+                   placeholder="Enter Relative Humidity" required>
+
+            <label for="WS">🌬 Wind Speed (km/h)</label>
+            <input type="text" class="form-control" id="WS" name="WS"
+                   placeholder="Enter Wind Speed" required>
+
+            <label for="Rain">🌧 Rain (mm)</label>
+            <input type="text" class="form-control" id="Rain" name="Rain"
+                   placeholder="Enter Rain" required>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <label for="FFMC">🔥 FFMC (Fine Fuel Moisture Code)</label>
+            <input type="text" class="form-control" id="FFMC" name="FFMC"
+                   placeholder="Enter FFMC" required>
+
+            <label for="DMC">🌲 DMC (Duff Moisture Code)</label>
+            <input type="text" class="form-control" id="DMC" name="DMC"
+                   placeholder="Enter DMC" required>
+
+            <label for="ISI">🔥 ISI (Initial Spread Index)</label>
+            <input type="text" class="form-control" id="ISI" name="ISI"
+                   placeholder="Enter ISI" required>
+
+            <label for="Classes">🔥 Fire Class</label>
+            <select class="form-control" id="Classes" name="Classes" required>
+                <option value="">Select Fire Class</option>
+                <option value="0">0 - No Fire</option>
+                <option value="1">1 - Fire</option>
+            </select>
+
+            <label for="Region">📌 Region</label>
+            <select class="form-control" id="Region" name="Region" required>
+                <option value="">Select Region</option>
+                <option value="0">0 - Bejaia Region</option>
+                <option value="1">1 - Sidi Bel-Abbes Region</option>
+            </select>
+
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center mt-4">
+        <button type="submit" class="btn btn-main w-50">Predict 🔍</button>
+    </div>
+</form>
+
+</div>
+
+<!-- Result Modal (put this near bottom of home.html, before bootstrap bundle) -->
+<<div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="resultModalLabel">Prediction Result</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+
+        {# Debug: shows what Jinja actually received (remove after confirming) #}
+        <!-- <pre>DEBUG: prediction={{ prediction | default('UNDEF') }} | error={{ error | default('UNDEF') }}</pre> -->
+
+        {% if error is defined and error %}
+          <div class="alert alert-danger" role="alert">
+            <strong>Error:</strong> {{ error }}
+          </div>
+
+        {% elif prediction is defined and prediction is not none and prediction != '' %}
+          <p class="mb-1">Predicted FWI value:</p>
+          <h4 class="fw-bold prediction-value">{{ prediction }}</h4>
+
+          {# risk-level logic #}
+          {% set p = prediction | float %}
+          {% if p >= 40 %}
+            <div class="badge bg-danger mt-2">Risk Level: HIGH</div>
+          {% elif p >= 20 %}
+            <div class="badge bg-warning text-dark mt-2">Risk Level: MEDIUM</div>
+          {% else %}
+            <div class="badge bg-success mt-2">Risk Level: LOW</div>
+          {% endif %}
+
+        {% else %}
+          <p class="text-muted">No prediction was returned.</p>
+        {% endif %}
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS (keep existing src) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+{# Only auto-open modal when prediction or error is actually present #}
+{% if (error is defined and error) or (prediction is defined and prediction is not none and prediction != '') %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var resultModal = new bootstrap.Modal(document.getElementById("resultModal"));
+    resultModal.show();
+  });
+</script>
+{% endif %}
+
+</body>
+</html>
